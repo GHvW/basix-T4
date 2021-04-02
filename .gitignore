@@ -1,0 +1,14 @@
+/target
+Cargo.lock
+
+.vs
+.vscode
+.metals
+.fake
+.ionide
+.idea
+
+node_modules
+
+bin
+obj
