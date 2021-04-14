@@ -1,11 +1,40 @@
+use std::collections::HashMap;
 
-pub struct Base64Table {
-    table: [char; 64]
+// todo
+pub fn char_to_char(c: char) -> char {
+    c
 }
 
-impl Base64Table {
+pub struct Base64 {
+    table: [char; 64],
+    map: HashMap<char, u8>
+}
+
+impl Base64 {
+
+    pub fn encode_string(&self, string: &str) -> String {
+        string
+            .chars()
+            .map(|c| char_to_char(c))
+            .collect()
+    }
+
+    pub fn it(&self, string: &str) -> Vec<u8> {
+        string
+            .chars()
+            .map(|c| self.map.get(&c).clone())
+            .collect()
+    }
+
     pub fn new() -> Self {
+        let mut map = HashMap::new();
+        map.insert('T', 19);
+        map.insert('W', 22);
+        map.insert('F', 5);
+        map.insert('u', 46);
+
         Self {
+            map,
             table: [
                 'A', // 0
                 'B',
