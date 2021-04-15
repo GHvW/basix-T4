@@ -19,13 +19,24 @@ impl Base64 {
             .collect()
     }
 
-    pub fn it(&self, string: &str) -> impl Iterator<Item=Option<u8>> {
-        string
-            .chars()
-            .map(|c| {
-                self.map.get(&c)
-            })
-            .take_while(|option| option.is_some())
+    pub fn it<'a>(&self, string: &'a str) -> Result<Vec<u8>, String> {
+        let result = 
+            string
+                .chars()
+                .map(|c| {
+                    self.map
+                        .get(&c)
+                        .copied()
+                        .unwrap_or(u8::MAX)
+                })
+                .take_while(|it| *it != u8::MAX)
+                .collect::<Vec<u8>>();
+
+        if result.len() == string.len() {
+            Ok(result)
+        } else {
+            Err("Provided string is invalid Base64".to_string())
+        }
     }
 
     pub fn new() -> Self {
