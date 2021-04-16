@@ -1,6 +1,7 @@
 // letters are 6 bits, correspond to letters in the table
 // Ex 'T' is 010011 which = 19 in decimal. In the base64 table, 19 = T
 // consider returning 3 byte chunks as an iterator and then flattening them
+// need to handle padding
 pub mod base_64_table;
 
 type Chunk = [u8; 3];

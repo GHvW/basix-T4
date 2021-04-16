@@ -17,23 +17,17 @@ impl<I> Chunks<I> {
 }
 
 impl<I: Iterator<Item=u8>> Iterator for Chunks<I> {
-    type Item = Vec<u8>;
+    type Item = [u8; 4];
 
-    fn next(&mut self) -> Option<Vec<u8>> {
-        self.iter.next().map(|first| {
-            let mut chunk = vec![first];
-
-            self.iter.next().map(|second| {
-                chunk.push(second);
-                ()
-            });
-
-            self.iter.next().map(|third| {
-                chunk.push(third);
-                ()
-            });
-
-            chunk
+    fn next(&mut self) -> Option<[u8; 4]> {
+        self.iter.next().and_then(|first| {
+            self.iter.next().and_then(|second| {
+                self.iter.next().and_then(|third| {
+                    self.iter.next().map(|fourth| {
+                        [first, second, third, fourth]
+                    })
+                })
+            })
         })
     }
 }
@@ -52,6 +46,15 @@ impl<A> Chunked for A where A: Iterator<Item=u8> {
 }
 
 
+fn decode_chunk(vec: &[u8; 4]) -> Vec<char> {
+    let first = (vec[0] << 2) | ((vec[1] & 0b110000) >> 6);
+    let second = ((vec[1] & 0b001111) << 4) | ((vec[2] & 0b111100) >> 2);
+    let third = ((vec[2] & 0b000011) << 6) | vec[3];
+    
+    vec![char::from(first), char::from(second), char::from(third)]
+}
+
+
 pub fn base64_to_indexes(map: &HashMap<char, u8>, string: &str) -> Result<Vec<u8>, String> {
     let result =
         string
@@ -61,6 +64,8 @@ pub fn base64_to_indexes(map: &HashMap<char, u8>, string: &str) -> Result<Vec<u8
                 .copied()
                 .unwrap_or(u8::MAX)
             })
+            .chunked()
+            .map(|v| decode_chunk(v))
             .take_while(|it| *it != u8::MAX)
             .collect::<Vec<u8>>();
 
