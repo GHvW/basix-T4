@@ -13,11 +13,7 @@ type Chunk = [u8; 3];
 //     let second = ((chunk[0] & 0b00000011) << 4) | ((chunk[1] & 0b11110000) >> 4);
 //     let third = ((chunk[1] & 0b00001111) << 2) | (chunk[2])
 // }
-pub fn it(string: &str) -> Vec<char> {
-    string
-        .chars()
-        
-}
+
 
 #[cfg(test)]
 mod tests {
@@ -33,13 +29,5 @@ mod tests {
         for byte in b.iter() {
             println!("byte: {}", byte);
         }
-    }
-
-    #[test]
-    fn play() {
-        let it = 
-        "TWFu"
-            .chars()
-            .
     }
 }

@@ -16,65 +16,62 @@ impl<I> Chunks<I> {
     }
 }
 
-impl<I: Iterator<Item=u8>> Iterator for Chunks<I> {
-    type Item = [u8; 4];
+impl<I: Iterator<Item=char>> Iterator for Chunks<I> {
+    type Item = (char, char, char, char);
 
-    fn next(&mut self) -> Option<[u8; 4]> {
-        self.iter.next().and_then(|first| {
-            self.iter.next().and_then(|second| {
-                self.iter.next().and_then(|third| {
-                    self.iter.next().map(|fourth| {
-                        [first, second, third, fourth]
-                    })
-                })
-            })
-        })
+    fn next(&mut self) -> Option<(char, char, char, char)> {
+        let first = self.iter.next()?;
+        let second = self.iter.next()?;
+        let third = self.iter.next()?;
+        let fourth = self.iter.next()?;
+
+        Some((first, second, third, fourth))
     }
 }
 
 
-trait Chunked where Self: Sized {
 
-    fn chunked(self) -> Chunks<Self>;
+trait Chunked where Self: Sized {
+    fn base64_chunks(self) -> Chunks<Self>;
 }
 
-impl<A> Chunked for A where A: Iterator<Item=u8> {
+impl<A> Chunked for A where A: Iterator<Item=char> {
 
-    fn chunked(self) -> Chunks<Self> {
+    fn base64_chunks(self) -> Chunks<Self> {
         Chunks::new(self)
     }
 }
 
 
-fn decode_chunk(vec: &[u8; 4]) -> Vec<char> {
-    let first = (vec[0] << 2) | ((vec[1] & 0b110000) >> 6);
-    let second = ((vec[1] & 0b001111) << 4) | ((vec[2] & 0b111100) >> 2);
-    let third = ((vec[2] & 0b000011) << 6) | vec[3];
+pub fn decode_chunk(chunk: &[u8; 4]) -> [char; 3] {
+    let first = (chunk[0] << 2) | ((chunk[1] & 0b110000) >> 4);
+    let second = ((chunk[1] & 0b001111) << 4) | ((chunk[2] & 0b111100) >> 2);
+    let third = ((chunk[2] & 0b000011) << 6) | chunk[3];
     
-    vec![char::from(first), char::from(second), char::from(third)]
+    [char::from(first), char::from(second), char::from(third)]
 }
 
 
-pub fn base64_to_indexes(map: &HashMap<char, u8>, string: &str) -> Result<Vec<u8>, String> {
-    let result =
-        string
-            .chars()
-            .map(|c| {
-                map.get(&c)
-                .copied()
-                .unwrap_or(u8::MAX)
-            })
-            .chunked()
-            .map(|v| decode_chunk(v))
-            .take_while(|it| *it != u8::MAX)
-            .collect::<Vec<u8>>();
+// pub fn base64_to_indexes(map: &HashMap<char, u8>, string: &str) -> Result<Vec<u8>, String> {
+//     let result =
+//         string
+//             .chars()
+//             .base64_chunks()
+//             // .map(|c| {
+//             //     map.get(&c)
+//             //     .copied()
+//             //     .unwrap_or(u8::MAX)
+//             // })
+//             .map(|v| decode_chunk(v))
+//             .take_while(|it| *it != u8::MAX)
+//             .collect::<Vec<u8>>();
 
-    if result.len() == string.len() {
-        Ok(result)
-    } else {
-        Err("Provided string is invalid Base64".to_string())
-    }
-}
+//     if result.len() == string.len() {
+//         Ok(result)
+//     } else {
+//         Err("Provided string is invalid Base64".to_string())
+//     }
+// }
 
 pub struct Base64 {
     table: [char; 64],
@@ -224,5 +221,20 @@ impl Base64 {
                 '/' // 63
             ]
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    // https://en.wikipedia.org/wiki/Base64
+
+    #[test]
+    fn given_a_base64_chunk_when_decoded_returns_vec_of_3_chars() {
+        let expected = decode_chunk(&[19, 22, 5, 46]);
+
+        assert_eq!('M', expected[0]);
+        assert_eq!('a', expected[1]);
+        assert_eq!('n', expected[2]);
     }
 }
