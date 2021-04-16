@@ -1,8 +1,74 @@
 use std::collections::HashMap;
 
+
 // todo
 pub fn char_to_char(c: char) -> char {
     c
+}
+
+pub struct Chunks<I> {
+    iter: I
+}
+
+impl<I> Chunks<I> {
+    pub fn new(iter: I) -> Self {
+        Self { iter }
+    }
+}
+
+impl<I: Iterator<Item=u8>> Iterator for Chunks<I> {
+    type Item = Vec<u8>;
+
+    fn next(&mut self) -> Option<Vec<u8>> {
+        self.iter.next().map(|first| {
+            let mut chunk = vec![first];
+
+            self.iter.next().map(|second| {
+                chunk.push(second);
+                ()
+            });
+
+            self.iter.next().map(|third| {
+                chunk.push(third);
+                ()
+            });
+
+            chunk
+        })
+    }
+}
+
+
+trait Chunked where Self: Sized {
+
+    fn chunked(self) -> Chunks<Self>;
+}
+
+impl<A> Chunked for A where A: Iterator<Item=u8> {
+
+    fn chunked(self) -> Chunks<Self> {
+        Chunks::new(self)
+    }
+}
+
+
+pub fn base64_to_indexes(map: &HashMap<char, u8>, string: &str) -> Result<Vec<u8>, String> {
+    let result =
+        string
+            .chars()
+            .map(|c| {
+                map.get(&c)
+                .copied()
+                .unwrap_or(u8::MAX)
+            })
+            .take_while(|it| *it != u8::MAX)
+            .collect::<Vec<u8>>();
+
+    if result.len() == string.len() {
+        Ok(result)
+    } else {
+        Err("Provided string is invalid Base64".to_string())
+    }
 }
 
 pub struct Base64 {
@@ -17,26 +83,6 @@ impl Base64 {
             .chars()
             .map(|c| char_to_char(c))
             .collect()
-    }
-
-    pub fn it<'a>(&self, string: &'a str) -> Result<Vec<u8>, String> {
-        let result = 
-            string
-                .chars()
-                .map(|c| {
-                    self.map
-                        .get(&c)
-                        .copied()
-                        .unwrap_or(u8::MAX)
-                })
-                .take_while(|it| *it != u8::MAX)
-                .collect::<Vec<u8>>();
-
-        if result.len() == string.len() {
-            Ok(result)
-        } else {
-            Err("Provided string is invalid Base64".to_string())
-        }
     }
 
     pub fn new() -> Self {
