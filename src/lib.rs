@@ -2,7 +2,7 @@
 // Ex 'T' is 010011 which = 19 in decimal. In the base64 table, 19 = T
 // consider returning 3 byte chunks as an iterator and then flattening them
 // need to handle padding
-pub mod base_64_table;
+pub mod base_64;
 
 type Chunk = [u8; 3];
 
@@ -29,5 +29,7 @@ mod tests {
         for byte in b.iter() {
             println!("byte: {}", byte);
         }
+
+        let it = "hello world".as_bytes().chunks(3);
     }
 }

@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+
 const PADDING: u8 = u8::MAX;
 
 
@@ -7,16 +8,18 @@ pub struct Chunks<I> {
     iter: I
 }
 
+
 impl<I> Chunks<I> {
     pub fn new(iter: I) -> Self {
         Self { iter }
     }
 }
 
-impl<I: Iterator<Item=u8>> Iterator for Chunks<I> {
-    type Item = Vec<char>;
 
-    fn next(&mut self) -> Option<Vec<char>> {
+impl<I: Iterator<Item=u8>> Iterator for Chunks<I> {
+    type Item = Vec<u8>;
+
+    fn next(&mut self) -> Option<Vec<u8>> {
         let first = self.iter.next()?;
         let second = self.iter.next()?;
         let third = self.iter.next()?;
@@ -39,57 +42,55 @@ impl<A> Chunked for A where A: Iterator<Item=u8> {
 }
 
 
-fn decode_first_char(first: &u8, second: &u8) -> char {
-    char::from((first << 2) | ((second & 0b110000) >> 4))
+fn decode_first_byte(first: &u8, second: &u8) -> u8 {
+    (first << 2) | ((second & 0b110000) >> 4)
 }
 
 
-fn decode_second_char(second: &u8, third: &u8) -> char {
-    char::from(((second & 0b001111) << 4) | ((third & 0b111100) >> 2))
+fn decode_second_byte(second: &u8, third: &u8) -> u8 {
+    ((second & 0b001111) << 4) | ((third & 0b111100) >> 2)
 }
 
 
-pub fn decode_chunk(chunk: &[u8; 4]) -> Vec<char> {
+pub fn decode_chunk(chunk: &[u8; 4]) -> Vec<u8> {
     match chunk {
         [a, b, PADDING, PADDING] => {
-            vec![decode_first_char(a, b)]
+            vec![decode_first_byte(a, b)]
         },
         [a, b, c, PADDING] => {
             vec![
-                decode_first_char(a, b), 
-                decode_second_char(b, c)
+                decode_first_byte(a, b), 
+                decode_second_byte(b, c)
             ]
         },
         [a, b, c, d] => {
             vec![
-                decode_first_char(a, b), 
-                decode_second_char(b, c), 
-                char::from(((c & 0b000011) << 6) | d)
+                decode_first_byte(a, b), 
+                decode_second_byte(b, c), 
+                ((c & 0b000011) << 6) | d
             ]
         }
     }
 }
 
 
-// pub fn base64_to_string(map: &HashMap<char, u8>, string: &str) -> Result<Vec<u8>, String> {
-//     let result =
-//         string
-//             .chars()
-//             .map(|c| {
-//                 map.get(&c).copied()
-//             })
-//             .decode_base64_chunks()
-//             .flatten()
-//             .collect::<String>();
-// }
-
-pub struct Base64 {
-    table: [char; 64],
-    map: HashMap<char, u8>
+pub fn base64_to_bytes(map: &HashMap<char, u8>, string: &str) -> Vec<u8> {
+    string
+        .chars()
+        .map(|c| map.get(&c).copied())
+        .take_while(|it| it.is_some())
+        .map(|it| it.unwrap()) // look for map_while in the future
+        .decode_base64_chunks()
+        .flatten()
+        .collect()
 }
 
 
-impl Base64 {
+pub struct Base64Decoder {
+    map: HashMap<char, u8>
+}
+
+impl Base64Decoder {
 
     pub fn new() -> Self {
         let mut map = HashMap::new();
@@ -157,77 +158,10 @@ impl Base64 {
         map.insert('/', 62);
         map.insert('=', PADDING);
 
-        Self {
-            map,
-            table: [
-                'A', // 0
-                'B',
-                'C', 
-                'D',
-                'E',
-                'F',
-                'G',
-                'H',
-                'I',
-                'J',
-                'K', // 10
-                'L',
-                'M',
-                'N',
-                '0',
-                'P',
-                'Q',
-                'R',
-                'S',
-                'T',
-                'U', // 20
-                'V',
-                'W',
-                'X',
-                'Y',
-                'Z',
-                'a',
-                'b',
-                'c',
-                'd',
-                'e', // 30
-                'f',
-                'g',
-                'h',
-                'i',
-                'j',
-                'k',
-                'l',
-                'm',
-                'n',
-                'o', // 40
-                'p',
-                'q',
-                'r',
-                's',
-                't',
-                'u',
-                'v',
-                'w',
-                'x',
-                'y', // 50
-                'z',
-                '0',
-                '1',
-                '2',
-                '3',
-                '4',
-                '5',
-                '6',
-                '7',
-                '8', // 60
-                '9',
-                '+',
-                '/' // 63
-            ]
-        }
+        Self { map }
     }
 }
+
 
 #[cfg(test)]
 mod tests {
@@ -235,19 +169,19 @@ mod tests {
     // https://en.wikipedia.org/wiki/Base64
 
     #[test]
-    fn given_a_base64_chunk_when_there_is_no_padding_returns_vec_of_3_chars() {
-        let expected = decode_chunk(&[19, 22, 5, 46]);
+    fn given_a_base64_chunk_when_there_is_no_padding_returns_vec_of_3_bytes() {
+        let expected: Vec<char> = decode_chunk(&[19, 22, 5, 46]).iter().copied().map(|it| char::from(it)).collect();
 
         assert_eq!(3, expected.len());
-        assert_eq!('M', expected[0]);
-        assert_eq!('a', expected[1]);
+        assert_eq!('M', char::from(expected[0]));
+        assert_eq!('a', char::from(expected[1]));
         assert_eq!('n', expected[2]);
     }
 
 
     #[test]
-    fn given_a_base64_chunk_when_there_is_one_padding_returns_vec_of_2_chars() {
-        let expected = decode_chunk(&[19, 22, 5, PADDING]);
+    fn given_a_base64_chunk_when_there_is_one_padding_returns_vec_of_2_bytes() {
+        let expected: Vec<char> = decode_chunk(&[19, 22, 5, PADDING]).iter().copied().map(|it| char::from(it)).collect();
 
         assert_eq!(2, expected.len());
         assert_eq!('M', expected[0]);
@@ -255,8 +189,8 @@ mod tests {
     }
 
     #[test]
-    fn given_a_base64_chunk_when_there_are_two_paddings_returns_vec_of_1_chars() {
-        let expected = decode_chunk(&[19, 22, PADDING, PADDING]);
+    fn given_a_base64_chunk_when_there_are_two_paddings_returns_vec_of_1_bytes() {
+        let expected: Vec<char> = decode_chunk(&[19, 22, PADDING, PADDING]).iter().copied().map(|it| char::from(it)).collect();
 
         assert_eq!(1, expected.len());
         assert_eq!('M', expected[0]);
