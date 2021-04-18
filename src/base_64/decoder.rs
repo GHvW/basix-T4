@@ -36,7 +36,7 @@ fn decode_chunk(chunk: &[u8; 4]) -> Vec<u8> {
 }
 
 
-pub struct Chunks<I> {
+struct Chunks<I> {
     iter: I
 }
 
