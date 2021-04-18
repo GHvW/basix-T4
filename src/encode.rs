@@ -185,9 +185,24 @@ mod tests {
     }
 
     #[test]
-    fn the_test() {
-        let expected = Base64Encoder::new().encode("Man".as_bytes());
+    fn given_bytes_when_no_padding_is_needed_converts_to_base64() {
+        let expected = Base64Encoder::new().encode("Any Man made".as_bytes());
 
-        assert_eq!("TWFu", expected);
+        assert_eq!("QW55IE1hbiBtYWRl", expected);
+    }
+
+
+    #[test]
+    fn given_bytes_when_one_padding_is_needed_converts_to_base64_with_one_padding() {
+        let expected = Base64Encoder::new().encode("Any Man made thiNG i".as_bytes());
+
+        assert_eq!("QW55IE1hbiBtYWRlIHRoaU5HIGk=", expected);
+    }
+
+    #[test]
+    fn given_bytes_when_two_paddings_are_needed_converts_to_base64_with_two_padding() {
+        let expected = Base64Encoder::new().encode("Any Man made thiNG int".as_bytes());
+
+        assert_eq!("QW55IE1hbiBtYWRlIHRoaU5HIGludA==", expected);
     }
 }
