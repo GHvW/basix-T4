@@ -1,11 +1,3 @@
-// use std::io::prelude::*;
-// use std::fs::File;
-
-// extern crate clay;
-
-// use clay::primitive_readers::{ DataOps };
-// use clay::ShapeReaderFactory;
-
 use basixT4::decode::Base64Decoder;
 
 fn main() {
