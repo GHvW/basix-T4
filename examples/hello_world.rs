@@ -1,9 +1,11 @@
-# basix-T4
+// use std::io::prelude::*;
+// use std::fs::File;
 
-A (work in progress) basic Base64 encoder and decoder. Not focused on performance. Focused on working. Over and under engineering are not concerns and are both likely :laughing:
+// extern crate clay;
 
-Sample decoder usage
-```rust
+// use clay::primitive_readers::{ DataOps };
+// use clay::ShapeReaderFactory;
+
 use basixT4::decode::Base64Decoder;
 
 fn main() {
@@ -16,4 +18,3 @@ fn main() {
 
     println!("{}", hello_world);
 }
-```
