@@ -2,6 +2,8 @@
 
 A basic Base64 encoder and decoder. Not focused on performance. Focused on working. Over and under engineering are not concerns and are both likely :laughing:
 
+consider the [base64 crate](https://docs.rs/base64/0.13.0/base64/) as an alternative
+
 Sample decode
 ```rust
 use basixT4::decode::Base64Decoder;
