@@ -1,4 +1,3 @@
-const PADDING: u8 = u8::MAX;
 
 fn encode_first(first: u8) -> usize {
     usize::from((first & 0b11111100) >> 2)
