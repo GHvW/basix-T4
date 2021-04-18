@@ -15,8 +15,7 @@ fn decode_second_byte(second: &u8, third: &u8) -> u8 {
 
 
 fn decode_chunk(chunk: &[u8; 4]) -> Vec<u8> {
-    println!("chunk: {:?}", chunk);
-    let result = match chunk {
+    match chunk {
         [a, b, PADDING, PADDING] => {
             vec![decode_first_byte(a, b)]
         },
@@ -33,9 +32,7 @@ fn decode_chunk(chunk: &[u8; 4]) -> Vec<u8> {
                 ((c & 0b000011) << 6) | d
             ]
         }
-    };
-    println!("result: {:?}", result);
-    result
+    }
 }
 
 
@@ -143,21 +140,23 @@ impl Base64Decoder {
         map.insert('s', 44);
         map.insert('t', 45);
         map.insert('u', 46);
-        map.insert('w', 47);
-        map.insert('x', 48);
-        map.insert('y', 49);
-        map.insert('z', 50);
-        map.insert('1', 51);
-        map.insert('2', 52);
-        map.insert('3', 53);
-        map.insert('4', 54);
-        map.insert('5', 55);
-        map.insert('6', 56);
-        map.insert('7', 57);
-        map.insert('8', 58);
-        map.insert('9', 59);
-        map.insert('+', 61);
-        map.insert('/', 62);
+        map.insert('v', 47);
+        map.insert('w', 48);
+        map.insert('x', 49);
+        map.insert('y', 50);
+        map.insert('z', 51);
+        map.insert('0', 52);
+        map.insert('1', 53);
+        map.insert('2', 54);
+        map.insert('3', 55);
+        map.insert('4', 56);
+        map.insert('5', 57);
+        map.insert('6', 58);
+        map.insert('7', 59);
+        map.insert('8', 60);
+        map.insert('9', 61);
+        map.insert('+', 62);
+        map.insert('/', 63);
         map.insert('=', PADDING);
 
         Self { map }
@@ -200,12 +199,22 @@ mod tests {
 
     #[test]
     fn given_a_base64_string_when_there_is_no_padding_decoded_returns_the_correct_bytes() {
-        // let expected = Base64Decoder::new().decode("TWFuIGlz").iter().map(|it| char::from(*it)).collect::<String>();
-        // let expected = Base64Decoder::new().decode("YW55IGNhcm5hbCBwbGVhc3Vy").iter().map(|it| char::from(*it)).collect::<String>();
-        let expected = Base64Decoder::new().decode("QU5ZIENBUk5BTCBQTEVBU1VS").iter().map(|it| char::from(*it)).collect::<String>();
+        let expected = Base64Decoder::new().decode("QW55IE1hbiBtYWRl").iter().map(|it| char::from(*it)).collect::<String>();
 
-        // assert_eq!("Man is", expected);   
-        // assert_eq!("any carnal pleasur", expected);   
-        assert_eq!("ANY CARNAL PLEASUR", expected);   
+        assert_eq!("Any Man made", expected);
+    }
+
+    #[test]
+    fn given_a_base64_string_when_there_are_two_paddings_decoded_returns_the_correct_bytes() {
+        let expected = Base64Decoder::new().decode("QW55IE1hbiBtYWRlIHRoaU5HIGludA==").iter().map(|it| char::from(*it)).collect::<String>();
+
+        assert_eq!("Any Man made thiNG int", expected);
+    }
+
+    #[test]
+    fn given_a_base64_string_when_there_is_one_paddings_decoded_returns_the_correct_bytes() {
+        let expected = Base64Decoder::new().decode("QW55IE1hbiBtYWRlIHRoaU5HIGk=").iter().map(|it| char::from(*it)).collect::<String>();
+
+        assert_eq!("Any Man made thiNG i", expected);
     }
 }
